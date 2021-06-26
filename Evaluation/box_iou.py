@@ -49,6 +49,9 @@ def box_iou(gt_bboxes, pre_bboxes, pre_bb_images, thresh_iou=0.5):
     gt_recall_bboxes_idx = []
     pre_iou_images = []
     for i in range(nrof_images):
+        # print(i)
+        # if i == 32599:
+        #     print("stop")
         gt_bb_per_image = gt_bboxes[i]
         pre_bb_per_image = pre_bboxes[i]
         nrof_gt_bboxes = len(gt_bb_per_image)
@@ -63,8 +66,7 @@ def box_iou(gt_bboxes, pre_bboxes, pre_bb_images, thresh_iou=0.5):
                 else:
                     label = 0
                 pre_bboxes_iou.append(pre_bb_iou)
-                #pre_bboxes_confidence.append(pre_bb[4])
-                pre_bboxes_confidence.append(1.0)
+                pre_bboxes_confidence.append(pre_bb[4])
                 pre_bboxes_label.append(label)
                 gt_recall_bboxes_idx.append([i,k])
                 pre_iou_images.append(pre_bb_images[i])
@@ -72,8 +74,7 @@ def box_iou(gt_bboxes, pre_bboxes, pre_bb_images, thresh_iou=0.5):
     ### Normalisation the cofidence of the bounding boxes
     confi_max = max(pre_bboxes_confidence)
     confi_min = min(pre_bboxes_confidence)
-    #pre_bboxes_confidence_norm = [(x-confi_min)/(confi_max-confi_min) for x in pre_bboxes_confidence]
-    pre_bboxes_confidence_norm = [1.0 for x in pre_bboxes_confidence]
+    pre_bboxes_confidence_norm = [(x-confi_min)/(confi_max-confi_min) for x in pre_bboxes_confidence]
 
     return pre_bboxes_iou, pre_bboxes_confidence_norm, pre_bboxes_label, gt_recall_bboxes_idx, pre_iou_images
 

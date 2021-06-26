@@ -31,6 +31,86 @@ def read_box_MIDV2020_gt(type_dir):
 
     return bboxes
 
+def read_box_MIDV2020_gt_clips(type_dir):
+    bboxes = []
+
+    folders = os.listdir(type_dir)
+    folders.sort()
+    for folder in folders:
+        sub_folders = os.listdir(os.path.join(type_dir, folder))
+        sub_folders.sort()
+        for sub_folder in sub_folders:
+            bbox_files=glob.glob(os.path.join(type_dir, folder, sub_folder, '*.txt'))
+            bbox_files.sort()
+            for bbox_file in bbox_files:
+                with open(bbox_file, 'r') as f:
+                    lines = f.readlines()
+                    bboxes_image = []
+                    bboxes_area_image = []
+                    print(bbox_file)
+                    # if bbox_file == "/data/zming/datasets/MIDV2020/MIDV_det_final/clips_bbox/annotations/fin_id/76_bbox/000361_bbox.txt":
+                    #     print(bbox_file)
+                    if len(lines) == 0:
+                        bboxes.append([[0,0,0,0]])
+                    else:
+                        for line in lines:
+                            bbox = list(map(int, str.split(line, ' ')))
+                            if len(bbox) == 1:
+                                bboxes_area_image.append(0)
+                                bboxes_image.append([[0, 0, 0, 0]])
+                            else:
+                                tl_x = bbox[0]
+                                tl_y = bbox[1]
+                                br_x = bbox[2]
+                                br_y = bbox[3]
+                                bbox_area = (br_x-tl_x)*(br_y-tl_y)
+                                bboxes_area_image.append(bbox_area)
+                                bboxes_image.append(bbox)
+                        idx = np.argmax(bboxes_area_image)
+                        bbox_principle = bboxes_image[idx]
+                        bbox_principle = [bbox_principle[2],bbox_principle[3],bbox_principle[0],bbox_principle[1]]
+                        bboxes.append([bbox_principle])
+
+    return bboxes
+
+def read_box_MIDV2020_gt_templates(type_dir):
+    bboxes = []
+
+    folders = os.listdir(type_dir)
+    folders.sort()
+    for folder in folders:
+
+        bbox_files=glob.glob(os.path.join(type_dir, folder, '*.txt'))
+        bbox_files.sort()
+        for bbox_file in bbox_files:
+            with open(bbox_file, 'r') as f:
+                lines = f.readlines()
+                bboxes_image = []
+                bboxes_area_image = []
+                print(bbox_file)
+                if len(lines) == 0:
+                    bboxes.append([0,0,0,0])
+                else:
+                    for line in lines:
+                        bbox = list(map(int, str.split(line, ' ')))
+                        if len(bbox) == 1:
+                            bboxes_area_image.append(0)
+                            bboxes_image.append([0, 0, 0, 0])
+                        else:
+                            tl_x = bbox[0]
+                            tl_y = bbox[1]
+                            br_x = bbox[2]
+                            br_y = bbox[3]
+                            bbox_area = (br_x-tl_x)*(br_y-tl_y)
+                            bboxes_area_image.append(bbox_area)
+                            bboxes_image.append(bbox)
+                    idx = np.argmax(bboxes_area_image)
+                    bbox_principle = bboxes_image[idx]
+                    bbox_principle = [bbox_principle[2],bbox_principle[3],bbox_principle[0],bbox_principle[1]]
+                    bboxes.append([bbox_principle])
+
+    return bboxes
+
 def read_box_MIDV2020_pred(type_dir):
     bboxes = []
     pre_bb_images = []
@@ -44,7 +124,9 @@ def read_box_MIDV2020_pred(type_dir):
             bboxes_image = []
             bboxes_area_image = []
             for line in lines:
-                bbox = list(map(int, str.split(line, ' ')))
+                bbox_str = str.split(line, ' ')
+                bbox = list(map(int, bbox_str[:4]))
+                confidence = float(bbox_str[4])
                 tl_x = bbox[0]
                 tl_y = bbox[1]
                 br_x = bbox[2]
@@ -54,11 +136,87 @@ def read_box_MIDV2020_pred(type_dir):
                 bboxes_image.append(bbox)
             idx = np.argmax(bboxes_area_image)
             bbox_principle = bboxes_image[idx]
-            bbox_principle = [bbox_principle[2], bbox_principle[3], bbox_principle[0], bbox_principle[1]]
+            bbox_principle = [bbox_principle[2], bbox_principle[3], bbox_principle[0], bbox_principle[1], confidence]
             bboxes.append([bbox_principle])
 
     return bboxes, pre_bb_images
 
+def read_box_MIDV2020_pred_clips(type_dir, miss_annotation_file):
+    bboxes = []
+    pre_bb_images = []
+    folders = os.listdir(type_dir)
+    folders.sort()
+    # with open(miss_annotation_file, "r") as f:
+    #     miss_annotation_imgs = f.readlines()
+    for folder in folders:
+        sub_folders = os.listdir(os.path.join(type_dir, folder))
+        sub_folders.sort()
+        for sub_folder in sub_folders:
+            bbox_files=glob.glob(os.path.join(type_dir, folder, sub_folder, '*.txt'))
+            bbox_files.sort()
+            for bbox_file in bbox_files:
+                image_file = str.split(bbox_file, '.')[0] + '.jpg'
+                img_ori = image_file.replace("clips_det", "clips")
+                img_ori = img_ori[:-9]+'.jpg\n'
+                # if img_ori in miss_annotation_imgs:
+                #     continue
+                pre_bb_images.append(image_file)
+                with open(bbox_file, 'r') as f:
+                    lines = f.readlines()
+                    bboxes_image = []
+                    bboxes_area_image = []
+                    for line in lines:
+                        bbox_str = str.split(line, ' ')
+                        bbox = list(map(int, bbox_str[:4]))
+                        confidence = float(bbox_str[4])
+                        tl_x = bbox[0]
+                        tl_y = bbox[1]
+                        br_x = bbox[2]
+                        br_y = bbox[3]
+                        bbox_area = (br_x - tl_x) * (br_y - tl_y)
+                        bboxes_area_image.append(bbox_area)
+                        bboxes_image.append(bbox)
+                    idx = np.argmax(bboxes_area_image)
+                    bbox_principle = bboxes_image[idx]
+                    bbox_principle = [bbox_principle[2], bbox_principle[3], bbox_principle[0], bbox_principle[1],
+                                      confidence]
+                    bboxes.append([bbox_principle])
+
+    return bboxes, pre_bb_images
+
+def read_box_MIDV2020_pred_templates(type_dir):
+    bboxes = []
+    pre_bb_images = []
+    folders = os.listdir(type_dir)
+    folders.sort()
+    for folder in folders:
+        bbox_files=glob.glob(os.path.join(type_dir, folder, '*.txt'))
+        bbox_files.sort()
+        for bbox_file in bbox_files:
+            print(bbox_file)
+            image_file = str.split(bbox_file,'.')[0]+'.jpg'
+            pre_bb_images.append(image_file)
+            with open(bbox_file, 'r') as f:
+                lines = f.readlines()
+                bboxes_image = []
+                bboxes_area_image = []
+                for line in lines:
+                    bbox_str = str.split(line, ' ')
+                    bbox = list(map(int, bbox_str[:4]))
+                    confidence = float(bbox_str[4])
+                    tl_x = bbox[0]
+                    tl_y = bbox[1]
+                    br_x = bbox[2]
+                    br_y = bbox[3]
+                    bbox_area = (br_x-tl_x)*(br_y-tl_y)
+                    bboxes_area_image.append(bbox_area)
+                    bboxes_image.append(bbox)
+                idx = np.argmax(bboxes_area_image)
+                bbox_principle = bboxes_image[idx]
+                bbox_principle = [bbox_principle[2], bbox_principle[3], bbox_principle[0], bbox_principle[1], confidence]
+                bboxes.append([bbox_principle])
+
+    return bboxes, pre_bb_images
 
 def read_box(file):
     num_images = 0

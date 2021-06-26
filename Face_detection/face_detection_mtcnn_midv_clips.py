@@ -73,4 +73,4 @@ for i, sub in enumerate(subjects):
 
 
         t1 = time.time()
-        print("mtcnn fps: %f [%d/%d] [%d/%d]" % ((1 / (t1 - t0)), k, num_images, i, num_subjects))
+        print("mtcnn fps: %f [%d/%d] [%d/%d]" % ((1 / (t1 - t0)), k, num_images, i+575, num_subjects))
